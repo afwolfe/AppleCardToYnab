@@ -80,7 +80,7 @@ def get_apple_card_account_id():
 
 # Converts the dollar amount to a "milliunit" integer
 def amount_to_milliunit(amount):
-    return int(float(amount) * 100)
+    return int(float(amount) * 1000)
 
 # Uses the given csv file to create a list of YNAB SaveTransactions
 def parse_cardvision_csv(csv_file):
