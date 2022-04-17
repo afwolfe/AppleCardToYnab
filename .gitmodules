@@ -1,0 +1,3 @@
+[submodule "CardVision"]
+	path = CardVision
+	url = git@github.com:BergQuester/CardVision.git
