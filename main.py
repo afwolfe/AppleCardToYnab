@@ -1,15 +1,17 @@
 import argparse
 import csv
 import os
-from re import sub
 import subprocess
 
 from dateutil import parser
 from pprint import pprint
 
 import ynab_api
-from ynab_api.api import transactions_api
+from dotenv import load_dotenv
+from ynab_api.api import accounts_api, transactions_api
 from ynab_api.model import save_transaction
+
+load_dotenv() 
 
 argparser = argparse.ArgumentParser(description='Convert Apple Card screenshots to YNAB transactions.')
 argparser.add_argument("--imagePath", help="The path to the folder containing the screenshots for CardVision", required=False, default="screenshots/")
@@ -21,15 +23,20 @@ BUDGET_ID = os.environ.get("YNAB_BUDGET_ID")
 API_KEY = os.environ.get("YNAB_API_KEY")
 CARD_VISION_PATH = os.path.abspath("CardVision")
 
+account_id = os.environ.get("YNAB_APPLE_CARD_ACCOUNT_ID")
+
 # YNAB API configuration
 configuration = ynab_api.Configuration(
     host="https://api.youneedabudget.com/v1")
 configuration.api_key['bearer'] = API_KEY
 configuration.api_key_prefix['bearer'] = 'Bearer'
 
+# Builds and calls the cardvisioncli with the given parameters
 def call_CardVisionCli(input_folder, output_file):
     if not os.path.exists(input_folder):
-        raise Exception("inputPath does not exist")
+        raise FileNotFoundError("inputPath does not exist")
+    if os.path.exists(output_file):
+        raise FileExistsError("outputPath already exists")
     # Make the paths absolute since we'll be calling from the CardVision directory.
     if not os.path.isabs(input_folder):
         input_folder = os.path.abspath(input_folder)
@@ -37,17 +44,14 @@ def call_CardVisionCli(input_folder, output_file):
         output_file = os.path.abspath(output_file)
 
     # Build CardVision if necessary
-    build_command = [
-        "swift", "build"
-    ]
+    build_command = ["swift", "build", "-c", "release"]
     try:
         subprocess.run(build_command, cwd=CARD_VISION_PATH, check=True)
     except subprocess.CalledProcessError:
         raise Exception("Error occurred while building the cardvision CLI")
 
     # Call CardVision
-    cardvision_command = [
-        "swift", "run", "CardVisionCLI",
+    cardvision_command = ["swift", "run", "CardVisionCLI",
         "-imagePath", input_folder,
         "-outputPath", output_file
     ]
@@ -58,14 +62,27 @@ def call_CardVisionCli(input_folder, output_file):
     except subprocess.CalledProcessError:
         raise Exception("Error occurred while calling the cardvision CLI")
 
+# If account_id is not already stored (from the environment or a previous API call, get it and return it.)
 def get_apple_card_account_id():
-    # TODO: Use API to find "Apple Card" account
-    account_id = os.environ.get("YNAB_APPLE_CARD_ACCOUNT_ID")
-    return account_id
+    global account_id
+    if account_id is None:
+        with ynab_api.ApiClient(configuration) as api_client:
+            api_instance = accounts_api.AccountsApi(api_client)
+            api_response = api_instance.get_accounts(BUDGET_ID)
 
+            for account in api_response["data"]["accounts"]:
+                if "apple" in account["name"].lower():
+                    print(account["name"])
+                    account_id = account["id"]
+                    return account_id
+    else:
+        return account_id
+
+# Converts the dollar amount to a "milliunit" integer
 def amount_to_milliunit(amount):
     return int(float(amount) * 100)
 
+# Uses the given csv file to create a list of YNAB SaveTransactions
 def parse_cardvision_csv(csv_file):
     transactions = []
     with open(csv_file, 'r') as file:
@@ -83,7 +100,7 @@ def parse_cardvision_csv(csv_file):
     return transactions
 
 
-
+# Sends the POST request to create the transactions in YNAB
 def send_transactions_to_ynab(transactions):
     with ynab_api.ApiClient(configuration) as api_client:
         api_instance = transactions_api.TransactionsApi(api_client)

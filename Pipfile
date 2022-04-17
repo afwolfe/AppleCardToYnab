@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 ynab-api = {ref = "nullfix", git = "https://github.com/dmlerner/ynab-api.git"}
+python-dotenv = "*"
 
 [dev-packages]
 
