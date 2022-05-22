@@ -93,8 +93,8 @@ def parse_cardvision_csv(csv_file):
                     account_id=get_apple_card_account_id(),
                     date=parser.parse(row["Date"]).date(),
                     amount=amount_to_milliunit(row["Amount"]),
-                    payee_name=row["Payee"],
-                    memo=row["Memo"],
+                    payee_name=row["Payee"][:50],
+                    memo=row["Memo"][:200],
                     cleared="uncleared" if row["Pending"] == "true" else "cleared"
                 ))
     return transactions
