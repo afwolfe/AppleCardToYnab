@@ -5,6 +5,7 @@ import subprocess
 
 from dateutil import parser
 from pprint import pprint
+from tabulate import tabulate
 
 import ynab_api
 from dotenv import load_dotenv
@@ -30,6 +31,8 @@ configuration = ynab_api.Configuration(
     host="https://api.youneedabudget.com/v1")
 configuration.api_key['bearer'] = API_KEY
 configuration.api_key_prefix['bearer'] = 'Bearer'
+
+summary_keys = ['date', 'payee_name', 'amount', 'memo']
 
 # Builds and calls the cardvisioncli with the given parameters
 def call_CardVisionCli(input_folder, output_file):
@@ -85,18 +88,23 @@ def amount_to_milliunit(amount):
 # Uses the given csv file to create a list of YNAB SaveTransactions
 def parse_cardvision_csv(csv_file):
     transactions = []
+    summaries = []
     with open(csv_file, 'r') as file:
         transaction_rows = csv.DictReader(file)
         for row in transaction_rows:
             if row["Declined"] != "true": # don't import declined transactions
-                transactions.append(save_transaction.SaveTransaction(
+                transaction = save_transaction.SaveTransaction(
                     account_id=get_apple_card_account_id(),
                     date=parser.parse(row["Date"]).date(),
                     amount=amount_to_milliunit(row["Amount"]),
                     payee_name=row["Payee"][:50],
                     memo=row["Memo"][:200],
                     cleared="uncleared" if row["Pending"] == "true" else "cleared"
-                ))
+                )
+                summary = [transaction[f] for f in summary_keys]
+                summaries.append(summary)
+                transactions.append(transaction)
+    print(tabulate(summaries, headers=summary_keys))
     return transactions
 
 
@@ -111,4 +119,10 @@ def send_transactions_to_ynab(transactions):
 if __name__ == "__main__":
     call_CardVisionCli(args.imagePath, args.outputPath)
     transactions = parse_cardvision_csv(args.outputPath)
-    send_transactions_to_ynab(transactions)
+    confirm = ''
+    while confirm.lower() not in ['y', 'n']:
+        confirm = input("Send transactions to YNAB? (y/n) ")
+    if confirm.lower() == 'y':
+        send_transactions_to_ynab(transactions)
+    else:
+        print("Not sending transactions.")
