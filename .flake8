@@ -1,0 +1,5 @@
+[flake8]
+ignore = E124,E128,E226,E302,E41
+max-line-length = 100
+exclude = tests/*
+max-complexity = 10

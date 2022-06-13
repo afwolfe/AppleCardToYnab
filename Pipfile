@@ -4,12 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-ynab-api = {ref = "nullfix", git = "https://github.com/dmlerner/ynab-api.git"}
-python-dotenv = "*"
 prettytable = "*"
+python-dotenv = "*"
 tabulate = "*"
+ynab-api = {ref = "nullfix", git = "https://github.com/dmlerner/ynab-api.git"}
 
 [dev-packages]
+black = "*"
+flake8 = "*"
+
 
 [requires]
 python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true
