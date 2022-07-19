@@ -25,24 +25,24 @@ class Transaction:
     # If the transaction was marked as declined
     declined: bool = None
 
-    def setMemo(self, memo: str):
+    def set_memo(self, memo: str):
         self.memo = memo
-        self.declined = self.__is_declined__()
-        self.pending = self.__is_pending__()
+        self.declined = self.is_declined()
+        self.pending = self.is_pending()
 
-    def __is_daily_cash__(self):
-        nonDailyCashPayees = ["Payment", "Daily Cash Adjustment", "Balance Adjustment"]
-        if self.payee in nonDailyCashPayees:
+    def is_daily_cash(self):
+        non_dc_payees = ["Payment", "Daily Cash Adjustment", "Balance Adjustment"]
+        if self.payee in non_dc_payees:
             return False
 
-        return not ("refund" in self.memo.lower() or self.__is_declined__())
+        return not ("refund" in self.memo.lower() or self.is_declined())
 
 
-    def __is_declined__(self) -> bool:
+    def is_declined(self) -> bool:
         """Determines if the given transaction string is 'Declined'"""
         return "declined" in self.memo.lower()
 
-    def __is_pending__(self) -> bool:
+    def is_pending(self) -> bool:
         """Determines if the given transaction string is 'Pending'"""
         return "pending" in self.memo.lower()
         
