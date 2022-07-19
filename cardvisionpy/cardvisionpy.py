@@ -4,11 +4,10 @@ from csv import DictWriter
 import cv2
 import pytesseract
 
-
-TESSERACT_CONFIG = r'--oem 3 --psm 12'
-
 from cardvisionpy.models.transaction import Transaction
 from cardvisionpy.logic.transactionparser import TransactionParser
+
+TESSERACT_CONFIG = r'--oem 3 --psm 12'
 
 def get_grayscale(image: cv2.Mat):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

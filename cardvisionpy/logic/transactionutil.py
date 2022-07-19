@@ -1,7 +1,3 @@
-"""
-TransactionUtil.py
-"""
-
 import re
 
 

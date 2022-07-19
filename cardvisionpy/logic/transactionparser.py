@@ -1,6 +1,6 @@
 import dateparser
-from datetime import date
 import re
+from datetime import date
 
 import cardvisionpy.logic.transactionutil as transactionutil
 from cardvisionpy.models.transaction import Transaction
@@ -61,8 +61,8 @@ class TransactionParser:
                     daily_cash = self.raw_transactions.pop(0)
                 new_transaction.dailyCash = daily_cash
 
-            # // Sometimes "ago" winds up on the next line and separators from Family Sharing mess with the timestamp.
-            # // Keep building the string until it contains a valid time stamp.
+            # Sometimes "ago" winds up on the next line and separators from Family Sharing mess with the timestamp.
+            # Keep building the string until it contains a valid time stamp.
             if time_description is None:
                 time_description = self.raw_transactions.pop(0)
             while not transactionutil.is_timestamp(time_description):

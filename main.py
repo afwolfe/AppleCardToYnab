@@ -1,7 +1,6 @@
 import argparse
 import csv
 import os
-import subprocess
 from typing import List
 
 from dateutil import parser
