@@ -8,11 +8,16 @@ prettytable = "*"
 python-dotenv = "*"
 tabulate = "*"
 ynab-api = {ref = "nullfix", git = "https://github.com/dmlerner/ynab-api.git"}
+pillow = "*"
+pytesseract = "*"
+imutils = "*"
+opencv-python = "*"
+dateparser = "*"
 
 [dev-packages]
 black = "*"
 flake8 = "*"
-
+pytest = "*"
 
 [requires]
 python_version = "3.9"
