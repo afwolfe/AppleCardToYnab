@@ -13,6 +13,8 @@ import ynab_api
 from ynab_api.api import accounts_api, transactions_api
 from ynab_api.model import save_transaction
 
+from cardvisionpy import cardvisionpy
+
 load_dotenv()
 
 argparser = argparse.ArgumentParser(
@@ -23,12 +25,6 @@ argparser.add_argument(
     "-f", action="store_true", help="Force overwriting of outputPath."
 )
 cardvision = argparser.add_argument_group("cardvision")
-cardvision.add_argument(
-    "--cardVisionPath",
-    default="CardVision",
-    help="The path to use for CardVision. Defaults to 'CardVision/'",
-    required=False,
-)
 cardvision.add_argument(
     "--imagePath",
     default="screenshots/",
@@ -68,12 +64,9 @@ args = argparser.parse_args()
 
 force: bool = args.f
 
-card_vision_path: os.PathLike = os.path.abspath(args.cardVisionPath)
 image_path: os.PathLike = os.path.abspath(args.imagePath)
 output_path: os.PathLike = os.path.abspath(args.outputPath)
 
-if not os.path.exists(card_vision_path):
-    raise FileNotFoundError(f"cardVisionPath: {card_vision_path} does not exist")
 if not os.path.exists(image_path):
     raise FileNotFoundError(f"imagePath: {image_path} does not exist")
 if os.path.exists(output_path) and not force:
@@ -91,37 +84,16 @@ configuration.api_key_prefix["bearer"] = "Bearer"
 summary_keys = ["date", "payee_name", "amount", "memo"]
 
 
-def call_CardVisionCli(input_folder: os.PathLike, output_file: os.PathLike) -> None:
-    """Builds and calls the cardvisioncli with the specified input and output paths."""
-    # Make the paths absolute since we'll be calling from the CardVision directory.
-    if not os.path.isabs(input_folder):
-        input_folder = os.path.abspath(input_folder)
-    if not os.path.isabs(output_file):
-        output_file = os.path.abspath(output_file)
-
-    # Build CardVision if necessary
-    build_command = ["swift", "build", "-c", "release"]
+def call_cardvision(input_folder: os.PathLike, output_file: os.PathLike) -> None:
+    """Uses the cardvisionpy with the specified input and output paths."""
     try:
-        subprocess.run(build_command, cwd=card_vision_path, check=True)
-    except subprocess.CalledProcessError:
-        raise Exception("Error occurred while building the cardvision CLI")
-
-    # Call CardVision
-    cardvision_command = [
-        "swift",
-        "run",
-        "CardVisionCLI",
-        "-imagePath",
-        input_folder,
-        "-outputPath",
-        output_file,
-    ]
-    try:
-        subprocess.run(cardvision_command, cwd=card_vision_path, check=True)
+        # TODO: Parse Transactions directly instead of serializing to CSV first.
+        transactions = cardvisionpy.get_processed_transactions(input_folder)
+        cardvisionpy.write_to_csv(transactions, output_file)
         if not os.path.exists(output_file):
             raise FileNotFoundError("Output file was not detected")
-    except subprocess.CalledProcessError:
-        raise Exception("Error occurred while calling the cardvision CLI")
+    except Exception:
+        raise Exception("Error occurred while processing screenshots")
 
 
 def get_apple_card_account_id() -> str:
@@ -142,9 +114,10 @@ def get_apple_card_account_id() -> str:
         return account_id
 
 
-def amount_to_milliunit(amount: int) -> int:
-    """Converts the dollar amount to a "milliunit" integer"""
-    return int(float(amount) * 1000)
+def cents_to_milliunit(amount: int) -> int:
+    """Converts the cents amount to a "milliunit" integer"""
+    # TODO: Make cardvision py return the normal dollar float?
+    return int(float(amount) * 10)
 
 
 def parse_cardvision_csv(
@@ -156,14 +129,14 @@ def parse_cardvision_csv(
     with open(csv_file, "r") as file:
         transaction_rows = csv.DictReader(file)
         for row in transaction_rows:
-            if row["Declined"] != "true":  # don't import declined transactions
+            if row["declined"] != "true":  # don't import declined transactions
                 transaction = save_transaction.SaveTransaction(
                     account_id=get_apple_card_account_id(),
-                    date=parser.parse(row["Date"]).date(),
-                    amount=amount_to_milliunit(row["Amount"]),
-                    payee_name=row["Payee"][:50],
-                    memo=row["Memo"][:200],
-                    cleared="uncleared" if row["Pending"] == "true" else "cleared",
+                    date=parser.parse(row["date"]).date(),
+                    amount=cents_to_milliunit(row["amount"]),
+                    payee_name=row["payee"][:50],
+                    memo=row["memo"][:200],
+                    cleared="uncleared" if row["pending"] == "True" else "cleared",
                 )
                 summary = [transaction[f] for f in summary_keys]
                 summaries.append(summary)
@@ -183,7 +156,7 @@ def send_transactions_to_ynab(transactions: List[save_transaction.SaveTransactio
 
 
 if __name__ == "__main__":
-    call_CardVisionCli(image_path, output_path)
+    call_cardvision(image_path, output_path)
     transactions = parse_cardvision_csv(output_path)
     confirm = ""
     while confirm.lower() not in ["y", "n"]:
