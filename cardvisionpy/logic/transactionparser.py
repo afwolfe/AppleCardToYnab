@@ -1,6 +1,8 @@
-import dateparser
+import logging
 import re
 from datetime import date
+
+import dateparser
 
 import cardvisionpy.logic.transactionutil as transactionutil
 from cardvisionpy.models.transaction import Transaction
@@ -12,6 +14,7 @@ class TransactionParser:
 
     def __init__(self, transactions: list[str]):
         self.raw_transactions = transactions
+        self.logger = logging.getLogger()
 
     def get_transactions(self) -> list[Transaction]:
         """Iterates over all of the elements in the provided transactions and returns the final list."""
@@ -23,6 +26,7 @@ class TransactionParser:
     def next_transaction(self) -> Transaction:
         """Processes and removes the next transaction from the list"""
         try:
+            self.logger.debug(f"Beginning next transaction.\nraw_transactions: {self.raw_transactions}")
             new_transaction = Transaction()
             next_field = self.raw_transactions.pop(0)
 
@@ -60,11 +64,12 @@ class TransactionParser:
                 while ("%" not in daily_cash):
                     daily_cash = self.raw_transactions.pop(0)
                 new_transaction.dailyCash = daily_cash
+                next_field = self.raw_transactions.pop(0)
 
             # Sometimes "ago" winds up on the next line and separators from Family Sharing mess with the timestamp.
             # Keep building the string until it contains a valid time stamp.
             if time_description is None:
-                time_description = self.raw_transactions.pop(0)
+                time_description = next_field
             while not transactionutil.is_timestamp(time_description):
                 time_description += " " + self.raw_transactions.pop(0)
             
@@ -81,11 +86,13 @@ class TransactionParser:
             
             parsed_date = dateparser.parse(time_description)
             if parsed_date is None:
-                print("[WARN] Exception while parsing date, defaulting to today.")
+                self.logger.warn("Exception while parsing date, defaulting to today.")
                 new_transaction.date = date.today()
             else:
                 new_transaction.date = parsed_date.date()
+            
+            self.logger.debug(f"New transaction created:\n{new_transaction}")
             return new_transaction
         except IndexError:
-            print("[ERR] Ran out of text elements while generating transaction")
+            self.logger.error("Ran out of text elements while generating transaction.")
             return None

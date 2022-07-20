@@ -1,3 +1,4 @@
+import logging
 import os
 from csv import DictWriter
 
@@ -8,6 +9,8 @@ from cardvisionpy.models.transaction import Transaction
 from cardvisionpy.logic.transactionparser import TransactionParser
 
 TESSERACT_CONFIG = r'--oem 3 --psm 12'
+
+logger = logging.getLogger()
 
 def get_grayscale(image: cv2.Mat):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -22,6 +25,7 @@ def get_processed_transactions(input_path: os.PathLike):
 
         text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
         strs = [t.strip() for t in text.split("\n") if t]
+        logger.debug(strs)
         trot = TransactionParser(strs)
         transactions += trot.get_transactions()
     

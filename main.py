@@ -1,6 +1,8 @@
 import argparse
 import csv
+import logging
 import os
+import sys
 from typing import List
 
 from dateutil import parser
@@ -22,6 +24,9 @@ argparser = argparse.ArgumentParser(
 )
 argparser.add_argument(
     "-f", action="store_true", help="Force overwriting of outputPath."
+)
+argparser.add_argument(
+    "-d", action="store_true", help="Enables debug printing."
 )
 cardvision = argparser.add_argument_group("cardvision")
 cardvision.add_argument(
@@ -62,6 +67,20 @@ ynab.add_argument(
 args = argparser.parse_args()
 
 force: bool = args.f
+debug: bool = args.d
+
+logger = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)                             
+
+if debug:
+    logger.setLevel("DEBUG")
+    handler.setLevel("DEBUG") 
+else:
+    # logger.setLevel("INFO")
+    handler.setLevel("DEBUG") 
+log_format = logging.Formatter('[%(asctime)s] [%(levelname)s] - %(message)s')
+handler.setFormatter(log_format)
+logger.addHandler(handler)
 
 image_path: os.PathLike = os.path.abspath(args.imagePath)
 output_path: os.PathLike = os.path.abspath(args.outputPath)
@@ -106,8 +125,10 @@ def get_apple_card_account_id() -> str:
 
             for account in api_response["data"]["accounts"]:
                 if "apple" in account["name"].lower():
-                    print(account["name"])
+                    logger.info(f"Found Apple Account in YNAB: {account['name']}")
                     account_id = account["id"]
+                    logger.debug(f"YNAB Apple Account ID: {account['id']}")
+
                     return account_id
     else:
         return account_id
@@ -151,7 +172,7 @@ def send_transactions_to_ynab(transactions: List[save_transaction.SaveTransactio
         api_response = api_instance.create_transaction(
             budget_id, {"transactions": transactions}
         )
-        pprint(api_response)
+        logger.debug(api_response)
 
 
 if __name__ == "__main__":
@@ -163,4 +184,4 @@ if __name__ == "__main__":
     if confirm.lower() == "y":
         send_transactions_to_ynab(transactions)
     else:
-        print("Not sending transactions.")
+        logger.info("Not sending transactions.")
