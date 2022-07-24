@@ -48,19 +48,22 @@ class TransactionParser:
 
             time_description = None
             if new_transaction.payee == "Balance Adjustment":
-                third_ba_line = self.raw_transactions.pop(0)
+                third_ba_line = next_field
                 if third_ba_line == "Dispute - Provisional Adjustment":
                     new_transaction.set_memo(third_ba_line)
                 else:
                     time_description = third_ba_line
                     new_transaction.set_memo(new_transaction.payee)
             else:
+                if "%" in next_field: # Sometimes Daily Cash percent is first.
+                    new_transaction.dailyCash = next_field
+                    next_field = self.raw_transactions.pop(0)
                 new_transaction.set_memo(next_field)
 
             next_field = self.raw_transactions.pop(0)
 
-            daily_cash = next_field
-            if new_transaction.is_daily_cash():
+            if new_transaction.is_daily_cash() and new_transaction.dailyCash is None:
+                daily_cash = next_field
                 while ("%" not in daily_cash):
                     daily_cash = self.raw_transactions.pop(0)
                 new_transaction.dailyCash = daily_cash

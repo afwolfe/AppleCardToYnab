@@ -8,7 +8,7 @@ import pytesseract
 from cardvisionpy.models.transaction import Transaction
 from cardvisionpy.logic.transactionparser import TransactionParser
 
-TESSERACT_CONFIG = r'--oem 3 --psm 12'
+TESSERACT_CONFIG = r'--oem 3 --psm 11'
 
 logger = logging.getLogger()
 
