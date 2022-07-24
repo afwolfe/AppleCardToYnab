@@ -26,8 +26,8 @@ def get_processed_transactions(input_path: os.PathLike):
         text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
         strs = [t.strip() for t in text.split("\n") if t]
         logger.debug(strs)
-        trot = TransactionParser(strs)
-        transactions += trot.get_transactions()
+        tp =  TransactionParser(strs)
+        transactions += tp.get_transactions()
     
     # Sort by date
     return sorted(transactions, key=lambda x: getattr(x, 'date'))

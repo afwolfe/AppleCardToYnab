@@ -7,8 +7,8 @@ def test_next_transaction():
         'Amazon', '$50.00', 'Card Number Used', '1%', 'Yesterday'
     ]
     
-    trot = TransactionParser(raw_transaction)
-    actual = trot.next_transaction()
+    tp =  TransactionParser(raw_transaction)
+    actual = tp.next_transaction()
 
     assert(actual.payee == "Amazon")
     assert(actual.amount == -5000)
@@ -24,8 +24,8 @@ def test_transaction_amount_first():
         '$100.00', 'Grocery Store', 'Card Number Used', '1%', '5 hours ago'
     ]
     
-    trot = TransactionParser(raw_transaction)
-    actual = trot.next_transaction()
+    tp =  TransactionParser(raw_transaction)
+    actual = tp.next_transaction()
 
     assert(actual.payee == "Grocery Store")
     assert(actual.amount == -10000)
@@ -42,8 +42,8 @@ def test_transaction_daily_cash_before_memo():
         'Movie Theater', '$25.00', '2%', 'Pending - Card Number Used', '5 minutes ago'
     ]
     
-    trot = TransactionParser(raw_transaction)
-    actual = trot.next_transaction()
+    tp =  TransactionParser(raw_transaction)
+    actual = tp.next_transaction()
 
     assert(actual.payee == "Movie Theater")
     assert(actual.amount == -2500)
@@ -57,8 +57,8 @@ def test_transaction_daily_cash_before_memo():
 def test_daily_cash_adjustment():
     raw_transaction = ['Daily Cash Adjustment', '$0.25', 'From Refund', 'Yesterday']
 
-    trot = TransactionParser(raw_transaction)
-    actual = trot.next_transaction()
+    tp =  TransactionParser(raw_transaction)
+    actual = tp.next_transaction()
 
     assert(actual.payee == "Daily Cash Adjustment")
     assert(actual.amount == -25)
