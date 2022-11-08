@@ -4,15 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+cardvisionpy = {ref = "main", git = "git@github.com:afwolfe/cardvisionpy.git" }
+dateparser = "*"
+imutils = "*"
+opencv-python = "*"
+pillow = "*"
 prettytable = "*"
+pytesseract = "*"
 python-dotenv = "*"
 tabulate = "*"
 ynab-api = {ref = "nullfix", git = "https://github.com/dmlerner/ynab-api.git"}
-pillow = "*"
-pytesseract = "*"
-imutils = "*"
-opencv-python = "*"
-dateparser = "*"
 
 [dev-packages]
 black = "*"
@@ -20,7 +21,7 @@ flake8 = "*"
 pytest = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"
 
 [pipenv]
 allow_prereleases = true
