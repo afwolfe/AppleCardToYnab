@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-cardvisionpy = {ref = "main", git = "git@github.com:afwolfe/cardvisionpy.git" }
+cardvisionpy = {ref = "main", git = "https://github.com/afwolfe/cardvisionpy.git" }
 python-dotenv = "*"
 tabulate = "*"
 ynab-api = {ref = "nullfix", git = "https://github.com/dmlerner/ynab-api.git"}
@@ -13,7 +13,7 @@ ynab-api = {ref = "nullfix", git = "https://github.com/dmlerner/ynab-api.git"}
 flake8 = "*"
 
 [requires]
-python_version = "3.10"
+python_version = "3.11"
 
 [pipenv]
 allow_prereleases = true

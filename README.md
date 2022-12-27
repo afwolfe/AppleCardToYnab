@@ -23,4 +23,4 @@ Uses [cardvisionpy](https://github.com/afwolfe/cardvisionpy) and [ynab-api](http
 3. Run the script, optionally including arguments specifying the `--inputPath` folder and `--outputPath` file for CardVision.
    * `pipenv run python main.py`
 4. Review the resulting transactions and enter `y` or `n` to confirm or cancel uploading the transactions to YNAB.
-5. 
+
