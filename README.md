@@ -1,5 +1,7 @@
 # AppleCardToYnab
 
+**DEPRECATED - YNAB has implemented an official solution. See this YNAB blog post for how to set up imports on iOS 17.4+: [Introducing Effortless Apple Card Imports with YNAB](https://www.ynab.com/blog/ynab-apple-wallet)**
+
 Uses [cardvisionpy](https://github.com/afwolfe/cardvisionpy) and [ynab-api](https://github.com/dmlerner/ynab-api) to parse Apple Card transaction screenshots and send them to YNAB as transactions.
 
 ## Requirements
